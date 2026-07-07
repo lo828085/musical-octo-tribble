@@ -5,100 +5,130 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hexon Core AI</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
-        /* Glassmorphism Theme Overrides */
+        /* Refined Glassmorphism & Core Background */
         body {
-            background: radial-gradient(circle at 50% 50%, #1a1528 0%, #09070f 100%);
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #0b0914;
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(76, 29, 149, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 85% 30%, rgba(192, 38, 211, 0.15) 0%, transparent 50%);
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
             color: #e2e8f0;
             overflow: hidden;
         }
 
         .glass-panel {
-            background: rgba(25, 18, 41, 0.45);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            background: linear-gradient(145deg, rgba(30, 25, 45, 0.6), rgba(20, 15, 30, 0.4));
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
         }
 
         .glass-input {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            transition: all 0.3s ease;
+            background: rgba(15, 10, 25, 0.5);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        .glass-input:focus {
-            border-color: #a855f7;
-            box-shadow: 0 0 15px rgba(168, 85, 247, 0.4);
+        .glass-input:focus, .glass-input:hover {
+            border-color: rgba(168, 85, 247, 0.5);
+            background: rgba(25, 15, 40, 0.6);
             outline: none;
         }
 
-        /* Custom Scrollbar for Chat */
-        .custom-scrollbar::-webkit-scrollbar {
-            width: 6px;
+        /* Markdown Styling for AI Responses */
+        .markdown-body p { margin-bottom: 0.75em; }
+        .markdown-body p:last-child { margin-bottom: 0; }
+        .markdown-body code { 
+            background: rgba(0,0,0,0.3); 
+            padding: 0.2em 0.4em; 
+            border-radius: 4px; 
+            font-family: monospace; 
+            font-size: 0.9em;
+            color: #d8b4fe;
         }
-        .custom-scrollbar::-webkit-scrollbar-track {
-            background: transparent;
+        .markdown-body pre {
+            background: rgba(0,0,0,0.4);
+            padding: 1rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 0.5em 0;
+            border: 1px solid rgba(255,255,255,0.05);
         }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
+        .markdown-body pre code { background: transparent; padding: 0; color: #e2e8f0; }
+        .markdown-body ul { list-style-type: disc; padding-left: 1.5rem; margin-bottom: 0.75em; }
+        .markdown-body ol { list-style-type: decimal; padding-left: 1.5rem; margin-bottom: 0.75em; }
+
+        /* Custom Scrollbar */
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { 
+            background: rgba(255, 255, 255, 0.1); 
+            border-radius: 10px; 
         }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: rgba(168, 85, 247, 0.4);
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(168, 85, 247, 0.5); }
+
+        /* Entry Animation */
+        @keyframes slideUpFade {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
+        .message-enter { animation: slideUpFade 0.4s ease-out forwards; }
     </style>
 </head>
-<body class="h-screen w-screen flex items-center justify-center p-4 sm:p-6">
+<body class="h-screen w-screen flex items-center justify-center p-4 sm:p-8">
 
-    <div class="glass-panel w-full max-w-5xl h-full max-h-[850px] rounded-3xl flex flex-col overflow-hidden relative">
+    <div class="glass-panel w-full max-w-6xl h-full max-h-[900px] rounded-[2rem] flex flex-col relative">
         
-        <div class="absolute -top-40 -left-40 w-96 h-96 bg-purple-600/10 rounded-full blur-[100px] pointer-events-none"></div>
-        <div class="absolute -bottom-40 -right-40 w-96 h-96 bg-fuchsia-600/10 rounded-full blur-[100px] pointer-events-none"></div>
-
-        <div class="w-full p-4 flex flex-col sm:flex-row justify-between items-center gap-4 border-b border-white/5 z-10">
-            <div class="flex items-center gap-3">
-                <div class="relative flex h-3 w-3">
-                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
-                    <span class="relative inline-flex rounded-full h-3 w-3 bg-purple-500"></span>
+        <div class="w-full px-6 py-5 flex flex-col sm:flex-row justify-between items-center gap-4 border-b border-white/5 z-10 shrink-0">
+            <div class="flex items-center gap-4">
+                <div class="relative flex h-4 w-4 items-center justify-center">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-fuchsia-400 opacity-60"></span>
+                    <span class="relative inline-flex rounded-full h-2 w-2 bg-fuchsia-500 shadow-[0_0_8px_#d946ef]"></span>
                 </div>
-                <h1 class="text-xl font-bold tracking-wider uppercase text-purple-400">Hexon // Interface</h1>
+                <div>
+                    <h1 class="text-xl font-bold tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-fuchsia-400">HEXON CORE</h1>
+                    <p class="text-[10px] uppercase tracking-[0.2em] text-slate-500 font-mono">Neural Interface v2.0</p>
+                </div>
             </div>
 
-            <div class="flex items-center gap-2 w-full sm:w-auto">
-                <span class="text-xs uppercase text-slate-400 tracking-widest hidden md:inline">Core Model:</span>
-                <select id="modelSelect" class="glass-input text-sm text-slate-200 rounded-xl px-3 py-2 cursor-pointer w-full sm:w-64">
-                    <option value="meta-llama/Meta-Llama-3-8B-Instruct">Loading models...</option>
+            <div class="flex items-center gap-3 w-full sm:w-auto bg-black/20 px-3 py-2 rounded-2xl border border-white/5">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" /></svg>
+                <select id="modelSelect" class="bg-transparent text-sm text-slate-300 cursor-pointer w-full sm:w-56 outline-none appearance-none font-mono">
+                    <option value="meta-llama/Meta-Llama-3-8B-Instruct">meta-llama/Meta-Llama-3-8B-Instruct</option>
                 </select>
             </div>
         </div>
 
-        <div id="chatStream" class="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 custom-scrollbar z-10">
-            <div class="flex items-start gap-3 max-w-[85%]">
-                <div class="glass-panel h-8 w-8 rounded-lg flex items-center justify-center text-xs text-purple-400 border border-purple-500/30 flex-shrink-0 font-mono">HX</div>
-                <div class="glass-panel px-4 py-3 rounded-2xl rounded-tl-none border border-white/5 text-sm leading-relaxed text-slate-200">
-                    System initialized. Hexon online. Awaiting data parameters or script instructions.
+        <div id="chatStream" class="flex-1 overflow-y-auto p-6 sm:p-8 space-y-6 custom-scrollbar z-10 scroll-smooth">
+            <div class="flex items-start gap-4 max-w-[85%] message-enter">
+                <div class="h-10 w-10 rounded-2xl flex items-center justify-center text-xs text-fuchsia-400 border border-fuchsia-500/20 bg-fuchsia-500/10 flex-shrink-0 font-bold shadow-[0_0_15px_rgba(217,70,239,0.15)]">HX</div>
+                <div class="glass-panel px-5 py-4 rounded-3xl rounded-tl-sm text-sm leading-relaxed text-slate-200 shadow-lg">
+                    System initialized. Welcome back. I am ready to process your instruction packets.
                 </div>
             </div>
         </div>
 
-        <div class="p-4 border-t border-white/5 z-10">
-            <form id="inputForm" class="flex items-center gap-3 relative">
+        <div class="p-4 sm:p-6 shrink-0 z-10">
+            <form id="inputForm" class="flex items-end gap-3 relative max-w-5xl mx-auto">
                 
-                <button type="button" id="heartBtn" class="glass-input p-3 rounded-xl hover:text-rose-400 hover:border-rose-500/40 text-slate-400 flex items-center justify-center transition-all duration-300 group" title="Heart Matrix Diagnostics">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 transform group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <button type="button" id="heartBtn" class="glass-input h-14 w-14 rounded-2xl text-slate-400 hover:text-rose-400 flex items-center justify-center flex-shrink-0 group transition-all" title="Heart Matrix">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 transform group-hover:scale-110 group-active:scale-95 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                     </svg>
                 </button>
 
-                <input type="text" id="userInput" placeholder="Transmit instruction packet to Hexon..." autocomplete="off" class="glass-input flex-1 px-4 py-3 rounded-xl text-sm placeholder-slate-500 text-slate-100">
+                <div class="relative flex-1">
+                    <textarea id="userInput" rows="1" placeholder="Type a message to Hexon..." class="glass-input w-full px-5 py-4 rounded-2xl text-sm placeholder-slate-500 text-slate-100 resize-none custom-scrollbar leading-relaxed" style="min-height: 56px; max-height: 200px;"></textarea>
+                </div>
 
-                <button type="submit" class="bg-gradient-to-r from-purple-600 to-fuchsia-600 text-white p-3 rounded-xl hover:opacity-90 shadow-[0_0_15px_rgba(168,85,247,0.3)] flex items-center justify-center transition-all">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                <button type="submit" class="h-14 w-14 rounded-2xl bg-gradient-to-br from-purple-600 to-fuchsia-600 text-white flex items-center justify-center hover:opacity-90 shadow-[0_0_20px_rgba(192,38,211,0.4)] flex-shrink-0 transition-transform active:scale-95">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                     </svg>
                 </button>
             </form>
@@ -106,75 +136,85 @@
     </div>
 
     <script>
-        // Point this directly to your deployed Vercel URL
-        // Leave as empty string "" if deployed together in the same Vercel project
         const API_BASE_URL = ""; 
-
         const chatStream = document.getElementById('chatStream');
         const inputForm = document.getElementById('inputForm');
         const userInput = document.getElementById('userInput');
         const modelSelect = document.getElementById('modelSelect');
         const heartBtn = document.getElementById('heartBtn');
 
-        // 1. Fetch live active open-source models for selector dropdown
+        // Auto-resize textarea
+        userInput.addEventListener('input', function() {
+            this.style.height = '56px';
+            this.style.height = (this.scrollHeight) + 'px';
+        });
+
+        // Submit on Enter (Shift+Enter for new line)
+        userInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                inputForm.dispatchEvent(new Event('submit'));
+            }
+        });
+
         async function loadActiveModels() {
             try {
                 const res = await fetch(`${API_BASE_URL}/api/models`);
                 const data = await res.json();
                 
                 if (data.models && data.models.length > 0) {
-                    modelSelect.innerHTML = ''; // Clear default option
+                    modelSelect.innerHTML = ''; 
                     data.models.forEach(model => {
                         const option = document.createElement('option');
                         option.value = model;
-                        option.textContent = model;
-                        // Default selection preference setting
+                        option.textContent = model.split('/').pop(); // Make names cleaner in UI
                         if(model === "meta-llama/Meta-Llama-3-8B-Instruct") option.selected = true;
                         modelSelect.appendChild(option);
                     });
                 }
             } catch (err) {
-                console.error("Failed model network synchronization:", err);
-                modelSelect.innerHTML = '<option value="meta-llama/Meta-Llama-3-8B-Instruct">meta-llama/Meta-Llama-3-8B-Instruct (Default)</option>';
+                console.error("Failed model sync:", err);
             }
         }
 
-        // 2. DOM manipulation for adding conversational rows
         function appendMessage(text, isUser = false) {
             const wrapper = document.createElement('div');
-            wrapper.className = `flex items-start gap-3 max-w-[85%] ${isUser ? 'ml-auto flex-row-reverse' : ''}`;
+            wrapper.className = `flex items-start gap-4 max-w-[85%] message-enter ${isUser ? 'ml-auto flex-row-reverse' : ''}`;
 
             const avatar = document.createElement('div');
-            avatar.className = `glass-panel h-8 w-8 rounded-lg flex items-center justify-center text-xs flex-shrink-0 font-mono ${isUser ? 'text-fuchsia-400 border-fuchsia-500/30' : 'text-purple-400 border-purple-500/30'}`;
+            avatar.className = `h-10 w-10 rounded-2xl flex items-center justify-center text-xs font-bold flex-shrink-0 shadow-lg ${isUser ? 'text-purple-300 border border-purple-500/20 bg-purple-500/10' : 'text-fuchsia-400 border border-fuchsia-500/20 bg-fuchsia-500/10'}`;
             avatar.textContent = isUser ? 'US' : 'HX';
 
             const messageBox = document.createElement('div');
-            messageBox.className = `glass-panel px-4 py-3 rounded-2xl text-sm leading-relaxed text-slate-200 border border-white/5 ${isUser ? 'rounded-tr-none bg-purple-950/20' : 'rounded-tl-none'}`;
-            messageBox.innerText = text;
+            messageBox.className = `glass-panel px-5 py-4 rounded-3xl text-sm leading-relaxed text-slate-200 shadow-lg ${isUser ? 'rounded-tr-sm bg-purple-900/10' : 'rounded-tl-sm markdown-body'}`;
+            
+            // Use marked.js for AI responses to parse markdown
+            if (isUser) {
+                messageBox.innerText = text;
+            } else {
+                messageBox.innerHTML = marked.parse(text);
+            }
 
             wrapper.appendChild(avatar);
             wrapper.appendChild(messageBox);
             chatStream.appendChild(wrapper);
             
-            // Auto scroll down stream
             chatStream.scrollTop = chatStream.scrollHeight;
         }
 
-        // 3. Form submit handler processing network token loops
         inputForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const prompt = userInput.value.trim();
             if (!prompt) return;
 
-            // Display user message visually
             appendMessage(prompt, true);
             userInput.value = '';
+            userInput.style.height = '56px'; // Reset height
 
-            // Loading placeholder row
             const thinkingRow = document.createElement('div');
-            thinkingRow.className = "flex items-start gap-3 text-xs text-slate-500 italic animate-pulse pl-11";
+            thinkingRow.className = "flex items-start gap-4 text-xs text-slate-500 font-mono message-enter";
             thinkingRow.id = "hexon-thinking";
-            thinkingRow.innerText = "Hexon parsing matrix data stream...";
+            thinkingRow.innerHTML = `<div class="h-10 w-10 flex-shrink-0"></div><div class="px-2 py-3 flex items-center gap-2"><span class="h-1.5 w-1.5 bg-fuchsia-500 rounded-full animate-bounce"></span><span class="h-1.5 w-1.5 bg-fuchsia-500 rounded-full animate-bounce" style="animation-delay: 0.2s"></span><span class="h-1.5 w-1.5 bg-fuchsia-500 rounded-full animate-bounce" style="animation-delay: 0.4s"></span></div>`;
             chatStream.appendChild(thinkingRow);
             chatStream.scrollTop = chatStream.scrollHeight;
 
@@ -182,10 +222,7 @@
                 const response = await fetch(`${API_BASE_URL}/api/chat`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        message: prompt,
-                        model: modelSelect.value
-                    })
+                    body: JSON.stringify({ message: prompt, model: document.getElementById('modelSelect').value }) // Note: grabbing directly from DOM to ensure current selection
                 });
                 
                 const data = await response.json();
@@ -194,23 +231,21 @@
                 if (data.response) {
                     appendMessage(data.response, false);
                 } else if (data.error) {
-                    appendMessage(`System Exception: ${data.error}`, false);
+                    appendMessage(`Error: ${data.error}`, false);
                 }
             } catch (err) {
                 document.getElementById('hexon-thinking').remove();
-                appendMessage("Inference loop timed out or endpoint is offline.", false);
+                appendMessage("Connection error.", false);
             }
         });
 
-        // 4. Custom Heart Icon Matrix Diagnostic Action
         heartBtn.addEventListener('click', () => {
-            appendMessage("[Diagnostic Command Transmitted]: Analyze custom interface performance matrix.", true);
+            appendMessage("Initiate diagnostics.", true);
             setTimeout(() => {
-                appendMessage("UI matrix stable. Glassmorphism refraction levels optimal. Connection status clear.", false);
+                appendMessage("All systems operational. Connection secure.", false);
             }, 600);
         });
 
-        // Initialize script loop routine
         loadActiveModels();
     </script>
 </body>
