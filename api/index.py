@@ -1,6 +1,7 @@
+import os
 import requests
 from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from huggingface_hub import InferenceClient
 
@@ -19,6 +20,20 @@ app.add_middleware(
 client = InferenceClient(
     api_key="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"
 )
+
+# Safely locate index.html at the project root directory relative to this file
+current_dir = os.path.dirname(os.path.abspath(__file__))
+index_html_path = os.path.abspath(os.path.join(current_dir, "..", "index.html"))
+
+@app.get("/")
+async def serve_ui():
+    """Serves the glassmorphism frontend UI directly at the root URL"""
+    if os.path.exists(index_html_path):
+        return FileResponse(index_html_path)
+    return JSONResponse(
+        status_code=404, 
+        content={"error": f"index.html not found at expected path: {index_html_path}"}
+    )
 
 @app.post("/api/chat")
 async def chat_endpoint(request: Request):
