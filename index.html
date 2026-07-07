@@ -3,137 +3,166 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hexon Core AI</title>
+    <title>Hexon</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    
     <style>
-        /* Refined Glassmorphism & Core Background */
+        :root {
+            --bg-color: #131314;
+            --surface-color: #1E1F20;
+            --text-primary: #E3E3E3;
+            --text-secondary: #C4C7C5;
+            --border-color: #444746;
+            --accent: #A8C7FA;
+        }
+
         body {
-            background-color: #0b0914;
-            background-image: 
-                radial-gradient(circle at 15% 50%, rgba(76, 29, 149, 0.15) 0%, transparent 50%),
-                radial-gradient(circle at 85% 30%, rgba(192, 38, 211, 0.15) 0%, transparent 50%);
-            font-family: 'Inter', system-ui, -apple-system, sans-serif;
-            color: #e2e8f0;
-            overflow: hidden;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
 
-        .glass-panel {
-            background: linear-gradient(145deg, rgba(30, 25, 45, 0.6), rgba(20, 15, 30, 0.4));
-            backdrop-filter: blur(24px);
-            -webkit-backdrop-filter: blur(24px);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        h1, .font-google {
+            font-family: 'Google Sans', sans-serif;
         }
-
-        .glass-input {
-            background: rgba(15, 10, 25, 0.5);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .glass-input:focus, .glass-input:hover {
-            border-color: rgba(168, 85, 247, 0.5);
-            background: rgba(25, 15, 40, 0.6);
-            outline: none;
-        }
-
-        /* Markdown Styling for AI Responses */
-        .markdown-body p { margin-bottom: 0.75em; }
-        .markdown-body p:last-child { margin-bottom: 0; }
-        .markdown-body code { 
-            background: rgba(0,0,0,0.3); 
-            padding: 0.2em 0.4em; 
-            border-radius: 4px; 
-            font-family: monospace; 
-            font-size: 0.9em;
-            color: #d8b4fe;
-        }
-        .markdown-body pre {
-            background: rgba(0,0,0,0.4);
-            padding: 1rem;
-            border-radius: 8px;
-            overflow-x: auto;
-            margin: 0.5em 0;
-            border: 1px solid rgba(255,255,255,0.05);
-        }
-        .markdown-body pre code { background: transparent; padding: 0; color: #e2e8f0; }
-        .markdown-body ul { list-style-type: disc; padding-left: 1.5rem; margin-bottom: 0.75em; }
-        .markdown-body ol { list-style-type: decimal; padding-left: 1.5rem; margin-bottom: 0.75em; }
 
         /* Custom Scrollbar */
-        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { 
-            background: rgba(255, 255, 255, 0.1); 
-            border-radius: 10px; 
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(168, 85, 247, 0.5); }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #444746; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #5f6368; }
 
-        /* Entry Animation */
-        @keyframes slideUpFade {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+        /* UI Elements */
+        .model-selector {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            font-weight: 500;
+            cursor: pointer;
+            outline: none;
+            appearance: none;
+            font-family: 'Google Sans', sans-serif;
         }
-        .message-enter { animation: slideUpFade 0.4s ease-out forwards; }
+
+        .input-container {
+            background-color: var(--surface-color);
+            border-radius: 32px;
+            transition: background-color 0.2s ease;
+        }
+        
+        .input-container:focus-within {
+            background-color: #282A2C;
+        }
+
+        textarea {
+            background: transparent;
+            border: none;
+            outline: none;
+            resize: none;
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            font-size: 1rem;
+            line-height: 1.5;
+        }
+
+        /* Markdown Styling */
+        .markdown-body {
+            font-size: 1rem;
+            line-height: 1.6;
+            color: var(--text-primary);
+        }
+        .markdown-body p { margin-bottom: 1rem; }
+        .markdown-body p:last-child { margin-bottom: 0; }
+        .markdown-body code:not(pre code) {
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: 0.2em 0.4em;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 0.9em;
+        }
+        .markdown-body pre {
+            background-color: #1E1F20;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1rem;
+            overflow-x: auto;
+            margin: 1rem 0;
+        }
+        .markdown-body ul, .markdown-body ol {
+            padding-left: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        .markdown-body ul { list-style-type: disc; }
+        .markdown-body ol { list-style-type: decimal; }
+        
+        /* Sparkle Animation */
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        .thinking-sparkle { animation: spin 2s linear infinite; }
     </style>
 </head>
-<body class="h-screen w-screen flex items-center justify-center p-4 sm:p-8">
+<body>
 
-    <div class="glass-panel w-full max-w-6xl h-full max-h-[900px] rounded-[2rem] flex flex-col relative">
-        
-        <div class="w-full px-6 py-5 flex flex-col sm:flex-row justify-between items-center gap-4 border-b border-white/5 z-10 shrink-0">
-            <div class="flex items-center gap-4">
-                <div class="relative flex h-4 w-4 items-center justify-center">
-                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-fuchsia-400 opacity-60"></span>
-                    <span class="relative inline-flex rounded-full h-2 w-2 bg-fuchsia-500 shadow-[0_0_8px_#d946ef]"></span>
-                </div>
-                <div>
-                    <h1 class="text-xl font-bold tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-fuchsia-400">HEXON CORE</h1>
-                    <p class="text-[10px] uppercase tracking-[0.2em] text-slate-500 font-mono">Neural Interface v2.0</p>
-                </div>
-            </div>
-
-            <div class="flex items-center gap-3 w-full sm:w-auto bg-black/20 px-3 py-2 rounded-2xl border border-white/5">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" /></svg>
-                <select id="modelSelect" class="bg-transparent text-sm text-slate-300 cursor-pointer w-full sm:w-56 outline-none appearance-none font-mono">
-                    <option value="meta-llama/Meta-Llama-3-8B-Instruct">meta-llama/Meta-Llama-3-8B-Instruct</option>
-                </select>
-            </div>
+    <header class="w-full flex items-center justify-between px-6 py-4 z-10 absolute top-0 left-0">
+        <div class="flex items-center gap-2 group cursor-pointer px-3 py-1.5 hover:bg-[#1E1F20] rounded-lg transition-colors">
+            <span class="text-2xl font-google text-[#C4C7C5]">Hexon</span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-[#C4C7C5] opacity-50 group-hover:opacity-100"><path d="m6 9 6 6 6-6"/></svg>
+            <select id="modelSelect" class="absolute inset-0 opacity-0 cursor-pointer text-sm">
+                <option value="meta-llama/Meta-Llama-3-8B-Instruct">Loading models...</option>
+            </select>
         </div>
-
-        <div id="chatStream" class="flex-1 overflow-y-auto p-6 sm:p-8 space-y-6 custom-scrollbar z-10 scroll-smooth">
-            <div class="flex items-start gap-4 max-w-[85%] message-enter">
-                <div class="h-10 w-10 rounded-2xl flex items-center justify-center text-xs text-fuchsia-400 border border-fuchsia-500/20 bg-fuchsia-500/10 flex-shrink-0 font-bold shadow-[0_0_15px_rgba(217,70,239,0.15)]">HX</div>
-                <div class="glass-panel px-5 py-4 rounded-3xl rounded-tl-sm text-sm leading-relaxed text-slate-200 shadow-lg">
-                    System initialized. Welcome back. I am ready to process your instruction packets.
-                </div>
-            </div>
+        <div id="activeModelLabel" class="text-xs text-[#C4C7C5] bg-[#1E1F20] px-3 py-1 rounded-full font-mono hidden md:block">
+            meta-llama/Meta-Llama-3-8B-Instruct
         </div>
+    </header>
 
-        <div class="p-4 sm:p-6 shrink-0 z-10">
-            <form id="inputForm" class="flex items-end gap-3 relative max-w-5xl mx-auto">
+    <main class="flex-1 overflow-y-auto pt-20 pb-36 px-4 sm:px-6 w-full flex justify-center">
+        <div id="chatStream" class="w-full max-w-[800px] flex flex-col gap-8">
+            
+            <div id="emptyState" class="flex flex-col items-center justify-center h-[50vh] text-center fade-in">
+                <div class="w-16 h-16 mb-6">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M21 12C21 12 14.5 12 12 21C12 21 12 14.5 12 12C12 9.5 21 12 21 12ZM12 12C12 12 12 3 12 3C12 3 9.5 12 12 12ZM12 12C12 12 3 12 3 12C3 12 9.5 12 12 12ZM12 12C12 12 12 21 12 21" fill="url(#paint0_linear)"/>
+                        <defs>
+                            <linearGradient id="paint0_linear" x1="3" y1="3" x2="21" y2="21" gradientUnits="userSpaceOnUse">
+                                <stop stop-color="#A8C7FA" />
+                                <stop offset="1" stop-color="#D3E3FD" />
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                </div>
+                <h1 class="text-4xl sm:text-5xl font-google font-medium text-transparent bg-clip-text bg-gradient-to-r from-[#A8C7FA] to-[#D3E3FD] mb-2">Hello, Valdar.</h1>
+                <p class="text-[#C4C7C5] text-lg font-google">How can I help you today?</p>
+            </div>
+
+        </div>
+    </main>
+
+    <footer class="fixed bottom-0 w-full bg-gradient-to-t from-[#131314] via-[#131314] to-transparent pt-10 pb-6 px-4 sm:px-6 flex justify-center">
+        <form id="inputForm" class="w-full max-w-[800px] relative">
+            <div class="input-container flex items-end px-4 py-3 shadow-[0_4px_15px_rgba(0,0,0,0.5)]">
+                <textarea 
+                    id="userInput" 
+                    rows="1" 
+                    placeholder="Enter a prompt here" 
+                    class="flex-1 max-h-[200px] py-2 px-2 overflow-y-auto"
+                ></textarea>
                 
-                <button type="button" id="heartBtn" class="glass-input h-14 w-14 rounded-2xl text-slate-400 hover:text-rose-400 flex items-center justify-center flex-shrink-0 group transition-all" title="Heart Matrix">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 transform group-hover:scale-110 group-active:scale-95 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                    </svg>
+                <button type="submit" id="submitBtn" class="p-2 mb-1 rounded-full text-[#444746] transition-colors" disabled>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M3 20v-6l8-2-8-2V4l19 8z"/></svg>
                 </button>
-
-                <div class="relative flex-1">
-                    <textarea id="userInput" rows="1" placeholder="Type a message to Hexon..." class="glass-input w-full px-5 py-4 rounded-2xl text-sm placeholder-slate-500 text-slate-100 resize-none custom-scrollbar leading-relaxed" style="min-height: 56px; max-height: 200px;"></textarea>
-                </div>
-
-                <button type="submit" class="h-14 w-14 rounded-2xl bg-gradient-to-br from-purple-600 to-fuchsia-600 text-white flex items-center justify-center hover:opacity-90 shadow-[0_0_20px_rgba(192,38,211,0.4)] flex-shrink-0 transition-transform active:scale-95">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                    </svg>
-                </button>
-            </form>
-        </div>
-    </div>
+            </div>
+            <p class="text-center text-[#C4C7C5] text-xs mt-3 font-google">Hexon may display inaccurate info, including about people, so double-check its responses.</p>
+        </form>
+    </footer>
 
     <script>
         const API_BASE_URL = ""; 
@@ -141,20 +170,44 @@
         const inputForm = document.getElementById('inputForm');
         const userInput = document.getElementById('userInput');
         const modelSelect = document.getElementById('modelSelect');
-        const heartBtn = document.getElementById('heartBtn');
+        const activeModelLabel = document.getElementById('activeModelLabel');
+        const submitBtn = document.getElementById('submitBtn');
+        const emptyState = document.getElementById('emptyState');
 
-        // Auto-resize textarea
-        userInput.addEventListener('input', function() {
-            this.style.height = '56px';
-            this.style.height = (this.scrollHeight) + 'px';
+        // Configure Marked.js for highlight.js integration
+        marked.setOptions({
+            highlight: function(code, lang) {
+                const language = hljs.getLanguage(lang) ? lang : 'plaintext';
+                return hljs.highlight(code, { language }).value;
+            }
         });
 
-        // Submit on Enter (Shift+Enter for new line)
+        // Input button logic & auto-resize
+        userInput.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = (this.scrollHeight) + 'px';
+            
+            if (this.value.trim().length > 0) {
+                submitBtn.classList.remove('text-[#444746]');
+                submitBtn.classList.add('text-[#A8C7FA]', 'hover:bg-[rgba(168,199,250,0.1)]');
+                submitBtn.disabled = false;
+            } else {
+                submitBtn.classList.add('text-[#444746]');
+                submitBtn.classList.remove('text-[#A8C7FA]', 'hover:bg-[rgba(168,199,250,0.1)]');
+                submitBtn.disabled = true;
+            }
+        });
+
         userInput.addEventListener('keydown', function(e) {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
-                inputForm.dispatchEvent(new Event('submit'));
+                if(!submitBtn.disabled) inputForm.dispatchEvent(new Event('submit'));
             }
+        });
+
+        // Update visual label when model changes
+        modelSelect.addEventListener('change', (e) => {
+            activeModelLabel.textContent = e.target.value;
         });
 
         async function loadActiveModels() {
@@ -167,39 +220,43 @@
                     data.models.forEach(model => {
                         const option = document.createElement('option');
                         option.value = model;
-                        option.textContent = model.split('/').pop(); // Make names cleaner in UI
+                        option.textContent = model;
                         if(model === "meta-llama/Meta-Llama-3-8B-Instruct") option.selected = true;
                         modelSelect.appendChild(option);
                     });
                 }
             } catch (err) {
-                console.error("Failed model sync:", err);
+                console.error("Failed to load models.", err);
             }
         }
 
         function appendMessage(text, isUser = false) {
+            if(emptyState) emptyState.style.display = 'none';
+
             const wrapper = document.createElement('div');
-            wrapper.className = `flex items-start gap-4 max-w-[85%] message-enter ${isUser ? 'ml-auto flex-row-reverse' : ''}`;
+            wrapper.className = `flex gap-4 max-w-full ${isUser ? 'justify-end' : 'justify-start'}`;
 
-            const avatar = document.createElement('div');
-            avatar.className = `h-10 w-10 rounded-2xl flex items-center justify-center text-xs font-bold flex-shrink-0 shadow-lg ${isUser ? 'text-purple-300 border border-purple-500/20 bg-purple-500/10' : 'text-fuchsia-400 border border-fuchsia-500/20 bg-fuchsia-500/10'}`;
-            avatar.textContent = isUser ? 'US' : 'HX';
-
-            const messageBox = document.createElement('div');
-            messageBox.className = `glass-panel px-5 py-4 rounded-3xl text-sm leading-relaxed text-slate-200 shadow-lg ${isUser ? 'rounded-tr-sm bg-purple-900/10' : 'rounded-tl-sm markdown-body'}`;
-            
-            // Use marked.js for AI responses to parse markdown
             if (isUser) {
+                const messageBox = document.createElement('div');
+                messageBox.className = `bg-[#1E1F20] px-5 py-3 rounded-[24px] text-base text-white max-w-[85%] whitespace-pre-wrap`;
                 messageBox.innerText = text;
+                wrapper.appendChild(messageBox);
             } else {
+                // AI Sparkle Avatar
+                const avatar = document.createElement('div');
+                avatar.className = `w-8 h-8 flex-shrink-0 mt-1`;
+                avatar.innerHTML = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M21 12C21 12 14.5 12 12 21C12 21 12 14.5 12 12C12 9.5 21 12 21 12ZM12 12C12 12 12 3 12 3C12 3 9.5 12 12 12ZM12 12C12 12 3 12 3 12C3 12 9.5 12 12 12ZM12 12C12 12 12 21 12 21" fill="#A8C7FA"/></svg>`;
+                
+                const messageBox = document.createElement('div');
+                messageBox.className = `text-base text-white w-full max-w-[calc(100%-48px)] markdown-body`;
                 messageBox.innerHTML = marked.parse(text);
+                
+                wrapper.appendChild(avatar);
+                wrapper.appendChild(messageBox);
             }
 
-            wrapper.appendChild(avatar);
-            wrapper.appendChild(messageBox);
             chatStream.appendChild(wrapper);
-            
-            chatStream.scrollTop = chatStream.scrollHeight;
+            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
         }
 
         inputForm.addEventListener('submit', async (e) => {
@@ -209,20 +266,24 @@
 
             appendMessage(prompt, true);
             userInput.value = '';
-            userInput.style.height = '56px'; // Reset height
+            userInput.style.height = 'auto'; 
+            submitBtn.classList.add('text-[#444746]');
+            submitBtn.classList.remove('text-[#A8C7FA]', 'hover:bg-[rgba(168,199,250,0.1)]');
+            submitBtn.disabled = true;
 
+            // Loading state (Spinning Sparkle)
             const thinkingRow = document.createElement('div');
-            thinkingRow.className = "flex items-start gap-4 text-xs text-slate-500 font-mono message-enter";
+            thinkingRow.className = "flex gap-4 text-[#C4C7C5]";
             thinkingRow.id = "hexon-thinking";
-            thinkingRow.innerHTML = `<div class="h-10 w-10 flex-shrink-0"></div><div class="px-2 py-3 flex items-center gap-2"><span class="h-1.5 w-1.5 bg-fuchsia-500 rounded-full animate-bounce"></span><span class="h-1.5 w-1.5 bg-fuchsia-500 rounded-full animate-bounce" style="animation-delay: 0.2s"></span><span class="h-1.5 w-1.5 bg-fuchsia-500 rounded-full animate-bounce" style="animation-delay: 0.4s"></span></div>`;
+            thinkingRow.innerHTML = `<div class="w-8 h-8 flex-shrink-0 thinking-sparkle"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M21 12C21 12 14.5 12 12 21C12 21 12 14.5 12 12C12 9.5 21 12 21 12ZM12 12C12 12 12 3 12 3C12 3 9.5 12 12 12ZM12 12C12 12 3 12 3 12C3 12 9.5 12 12 12ZM12 12C12 12 12 21 12 21" fill="#A8C7FA"/></svg></div>`;
             chatStream.appendChild(thinkingRow);
-            chatStream.scrollTop = chatStream.scrollHeight;
+            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
 
             try {
                 const response = await fetch(`${API_BASE_URL}/api/chat`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ message: prompt, model: document.getElementById('modelSelect').value }) // Note: grabbing directly from DOM to ensure current selection
+                    body: JSON.stringify({ message: prompt, model: modelSelect.value })
                 });
                 
                 const data = await response.json();
@@ -235,15 +296,8 @@
                 }
             } catch (err) {
                 document.getElementById('hexon-thinking').remove();
-                appendMessage("Connection error.", false);
+                appendMessage("Failed to connect to the Hexon network.", false);
             }
-        });
-
-        heartBtn.addEventListener('click', () => {
-            appendMessage("Initiate diagnostics.", true);
-            setTimeout(() => {
-                appendMessage("All systems operational. Connection secure.", false);
-            }, 600);
         });
 
         loadActiveModels();
