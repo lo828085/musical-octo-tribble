@@ -80,7 +80,7 @@ async def chat_endpoint(request: Request):
 async def get_active_models():
     try:
         # Pushing the limit to 1000; sort=downloads ensures the best models are returned first
-        url = "https://huggingface.co/api/models?pipeline_tag=text-generation&sort=downloads&direction=-1&limit=50&search=instruct"
+        url = "https://huggingface.co/api/models?pipeline_tag=text-generation&sort=downloads&direction=-1&limit=50&inference=warm"
         response = requests.get(url)
         data = response.json()
         
