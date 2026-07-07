@@ -8,7 +8,6 @@ from huggingface_hub import InferenceClient
 
 app = FastAPI()
 
-# Allow your custom frontend UI to communicate with this API
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"], 
@@ -17,24 +16,24 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 1. Place your Base64 encoded token string here
-ENCODED_TOKEN = "aGZfcWRoZlpEWHZldFBNRmx0Q3RlaE96VlVkWXFucUhxQXd5RA==" # Replace with your actual base64 string
+# 1. Your Base64 encoded token string
+ENCODED_TOKEN = "aGZfcWRoZlpEWHZldFBNRmx0Q3RlaE96VlVkWXFucUhxQXd5RA=="
 
-# 2. Decode the token back to a standard string
+# 2. Decode the token
 decoded_token = base64.b64decode(ENCODED_TOKEN).decode("utf-8")
 
-# 3. Initialize Hugging Face with the decoded token
+# 3. Initialize Hugging Face
 client = InferenceClient(
     api_key=decoded_token
 )
 
-# Safely locate index.html at the project root directory relative to this file
+# Safely locate index.html at the project root
 current_dir = os.path.dirname(os.path.abspath(__file__))
 index_html_path = os.path.abspath(os.path.join(current_dir, "..", "index.html"))
 
 @app.get("/")
 async def serve_ui():
-    """Serves the glassmorphism frontend UI directly at the root URL"""
+    """Serves the frontend UI directly at the root URL"""
     if os.path.exists(index_html_path):
         return FileResponse(index_html_path)
     return JSONResponse(
@@ -47,16 +46,12 @@ async def chat_endpoint(request: Request):
     try:
         data = await request.json()
         user_message = data.get("message", "")
-        
-        # Dynamically grab the requested model from the frontend, 
-        # or default to Llama 3 8B if none is specified.
         selected_model = data.get("model", "meta-llama/Meta-Llama-3-8B-Instruct")
         
-        # Hexon's core persona context
         messages = [
             {
                 "role": "system",
-                "content": "You are a custom AI named Hexon. You communicate with a concise, slightly futuristic tone. Do not use navigation bars in your text output."
+                "content": "You are Hexon, a highly capable AI assistant. Communicate concisely, accurately, and functionally. Format your output cleanly using markdown, especially for code blocks."
             },
             {
                 "role": "user",
@@ -65,10 +60,10 @@ async def chat_endpoint(request: Request):
         ]
 
         # Call the hosted open-source model
-        response = client.chat.completions.create(
+        response = client.chat.completIONS.create(
             model=selected_model, 
             messages=messages, 
-            max_tokens=150
+            max_tokens=800
         )
         
         reply = response.choices[0].message.content
@@ -84,12 +79,11 @@ async def chat_endpoint(request: Request):
 @app.get("/api/models")
 async def get_active_models():
     try:
-        # Queries Hugging Face for the top 200 text-generation models
-        url = "https://huggingface.co/api/models?pipeline_tag=text-generation&sort=downloads&direction=-1&limit=500"
+        # Pushing the limit to 1000; sort=downloads ensures the best models are returned first
+        url = "https://huggingface.co/api/models?pipeline_tag=text-generation&sort=downloads&direction=-1&limit=1000"
         response = requests.get(url)
         data = response.json()
         
-        # Extract just the model IDs for your dropdown UI
         model_ids = [model["id"] for model in data]
         
         return {"total": len(model_ids), "models": model_ids}
