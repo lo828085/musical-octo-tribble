@@ -60,8 +60,8 @@ async def chat_endpoint(request: Request):
         ]
 
         # Call the hosted open-source model
-        response = client.chat.completIONS.create(
-            model=selected_model, 
+response = client.chat.completions.create(
+    model=selected_model, 
             messages=messages, 
             max_tokens=800
         )
