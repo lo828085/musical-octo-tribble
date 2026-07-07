@@ -85,7 +85,7 @@ async def chat_endpoint(request: Request):
 async def get_active_models():
     try:
         # Queries Hugging Face for the top 200 text-generation models
-        url = "https://huggingface.co/api/models?pipeline_tag=text-generation&sort=downloads&direction=-1&limit=200"
+        url = "https://huggingface.co/api/models?pipeline_tag=text-generation&sort=downloads&direction=-1&limit=500"
         response = requests.get(url)
         data = response.json()
         
