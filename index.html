@@ -14,6 +14,7 @@
         :root {
             --bg-color: #131314;
             --surface-color: #1E1F20;
+            --surface-variant: #282A2C;
             --text-primary: #E3E3E3;
             --text-secondary: #C4C7C5;
             --border-color: #444746;
@@ -27,7 +28,7 @@
             margin: 0;
             height: 100vh;
             display: flex;
-            flex-direction: column;
+            overflow: hidden;
         }
 
         h1, .font-google {
@@ -35,23 +36,10 @@
         }
 
         /* Custom Scrollbar */
-        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #444746; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #5f6368; }
-
-        /* UI Elements */
-        .model-selector {
-            background: transparent;
-            border: none;
-            color: var(--text-secondary);
-            font-size: 1.1rem;
-            font-weight: 500;
-            cursor: pointer;
-            outline: none;
-            appearance: none;
-            font-family: 'Google Sans', sans-serif;
-        }
 
         .input-container {
             background-color: var(--surface-color);
@@ -60,7 +48,7 @@
         }
         
         .input-container:focus-within {
-            background-color: #282A2C;
+            background-color: var(--surface-variant);
         }
 
         textarea {
@@ -104,77 +92,97 @@
         .markdown-body ul { list-style-type: disc; }
         .markdown-body ol { list-style-type: decimal; }
         
-        /* Sparkle Animation */
-        @keyframes spin { 100% { transform: rotate(360deg); } }
         .thinking-sparkle { animation: spin 2s linear infinite; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 
-    <header class="w-full flex items-center justify-between px-6 py-4 z-10 absolute top-0 left-0">
-        <div class="flex items-center gap-2 group cursor-pointer px-3 py-1.5 hover:bg-[#1E1F20] rounded-lg transition-colors">
-            <span class="text-2xl font-google text-[#C4C7C5]">Hexon</span>
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-[#C4C7C5] opacity-50 group-hover:opacity-100"><path d="m6 9 6 6 6-6"/></svg>
-            <select id="modelSelect" class="absolute inset-0 opacity-0 cursor-pointer text-sm">
-                <option value="meta-llama/Meta-Llama-3-8B-Instruct">Loading models...</option>
-            </select>
+    <aside class="w-80 h-full bg-[#1E1F20] border-r border-[#444746] flex flex-col z-20 shrink-0 hidden md:flex">
+        <div class="p-4 border-b border-[#444746] shrink-0">
+            <div class="flex items-center gap-2 mb-4">
+                <span class="text-xl font-google font-medium text-white tracking-wide">Hexon Core</span>
+                <span class="text-[10px] bg-[#282A2C] text-[#A8C7FA] px-2 py-0.5 rounded border border-white/5 font-mono">1K MODELS</span>
+            </div>
+            <div class="relative flex items-center">
+                <input type="text" id="modelSearch" placeholder="Search neural layers..." class="w-full bg-[#131314] text-sm text-white rounded-xl pl-9 pr-4 py-2.5 outline-none border border-transparent focus:border-[#444746] transition-colors font-google">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 absolute left-3 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+            </div>
         </div>
-        <div id="activeModelLabel" class="text-xs text-[#C4C7C5] bg-[#1E1F20] px-3 py-1 rounded-full font-mono hidden md:block">
-            meta-llama/Meta-Llama-3-8B-Instruct
-        </div>
-    </header>
 
-    <main class="flex-1 overflow-y-auto pt-20 pb-36 px-4 sm:px-6 w-full flex justify-center">
-        <div id="chatStream" class="w-full max-w-[800px] flex flex-col gap-8">
-            
-            <div id="emptyState" class="flex flex-col items-center justify-center h-[50vh] text-center fade-in">
-                <div class="w-16 h-16 mb-6">
-                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M21 12C21 12 14.5 12 12 21C12 21 12 14.5 12 12C12 9.5 21 12 21 12ZM12 12C12 12 12 3 12 3C12 3 9.5 12 12 12ZM12 12C12 12 3 12 3 12C3 12 9.5 12 12 12ZM12 12C12 12 12 21 12 21" fill="url(#paint0_linear)"/>
-                        <defs>
-                            <linearGradient id="paint0_linear" x1="3" y1="3" x2="21" y2="21" gradientUnits="userSpaceOnUse">
-                                <stop stop-color="#A8C7FA" />
-                                <stop offset="1" stop-color="#D3E3FD" />
-                            </linearGradient>
-                        </defs>
-                    </svg>
+        <div id="modelListContainer" class="flex-1 overflow-y-auto p-2 space-y-1 custom-scrollbar bg-[#1E1F20]">
+            <div class="text-xs text-slate-500 p-3 animate-pulse font-mono">Syncing pipeline registries...</div>
+        </div>
+    </aside>
+
+    <div class="flex-1 h-full flex flex-col relative overflow-hidden">
+        
+        <header class="w-full h-14 bg-[#1E1F20] border-b border-[#444746] flex items-center justify-between px-4 md:px-8 shrink-0">
+            <div class="flex items-center gap-3">
+                <span class="text-lg font-google text-white md:hidden">Hexon</span>
+                <div id="activeModelLabel" class="text-xs text-[#A8C7FA] bg-[#131314] border border-[#444746] px-3 py-1 rounded-full font-mono truncate max-w-[220px] sm:max-w-md">
+                    meta-llama/Meta-Llama-3-8B-Instruct
                 </div>
-                <h1 class="text-4xl sm:text-5xl font-google font-medium text-transparent bg-clip-text bg-gradient-to-r from-[#A8C7FA] to-[#D3E3FD] mb-2">Hello, Valdar.</h1>
-                <p class="text-[#C4C7C5] text-lg font-google">How can I help you today?</p>
             </div>
+            <div class="text-xs uppercase tracking-wider text-slate-500 font-mono hidden sm:block">Inference Node Connected</div>
+        </header>
 
-        </div>
-    </main>
-
-    <footer class="fixed bottom-0 w-full bg-gradient-to-t from-[#131314] via-[#131314] to-transparent pt-10 pb-6 px-4 sm:px-6 flex justify-center">
-        <form id="inputForm" class="w-full max-w-[800px] relative">
-            <div class="input-container flex items-end px-4 py-3 shadow-[0_4px_15px_rgba(0,0,0,0.5)]">
-                <textarea 
-                    id="userInput" 
-                    rows="1" 
-                    placeholder="Enter a prompt here" 
-                    class="flex-1 max-h-[200px] py-2 px-2 overflow-y-auto"
-                ></textarea>
+        <main class="flex-1 overflow-y-auto pb-36 pt-6 px-4 sm:px-6 w-full flex justify-center">
+            <div id="chatStream" class="w-full max-w-[800px] flex flex-col gap-8">
                 
-                <button type="submit" id="submitBtn" class="p-2 mb-1 rounded-full text-[#444746] transition-colors" disabled>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M3 20v-6l8-2-8-2V4l19 8z"/></svg>
-                </button>
+                <div id="emptyState" class="flex flex-col items-center justify-center h-[60vh] text-center">
+                    <div class="w-16 h-16 mb-6">
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M21 12C21 12 14.5 12 12 21C12 21 12 14.5 12 12C12 9.5 21 12 21 12ZM12 12C12 12 12 3 12 3C12 3 9.5 12 12 12ZM12 12C12 12 3 12 3 12C3 12 9.5 12 12 12ZM12 12C12 12 12 21 12 21" fill="url(#paint0_linear)"/>
+                            <defs>
+                                <linearGradient id="paint0_linear" x1="3" y1="3" x2="21" y2="21" gradientUnits="userSpaceOnUse">
+                                    <stop stop-color="#A8C7FA" />
+                                    <stop offset="1" stop-color="#D3E3FD" />
+                                </linearGradient>
+                            </defs>
+                        </svg>
+                    </div>
+                    <h1 class="text-4xl sm:text-5xl font-google font-medium text-transparent bg-clip-text bg-gradient-to-r from-[#A8C7FA] to-[#D3E3FD] mb-2">Hello, Valdar.</h1>
+                    <p class="text-[#C4C7C5] text-lg font-google">How can I help you today?</p>
+                </div>
+
             </div>
-            <p class="text-center text-[#C4C7C5] text-xs mt-3 font-google">Hexon may display inaccurate info, including about people, so double-check its responses.</p>
-        </form>
-    </footer>
+        </main>
+
+        <footer class="absolute bottom-0 w-full bg-gradient-to-t from-[#131314] via-[#131314] to-transparent pt-10 pb-6 px-4 sm:px-6 flex justify-center">
+            <form id="inputForm" class="w-full max-w-[800px] relative">
+                <div class="input-container flex items-end px-4 py-3 shadow-[0_4px_15px_rgba(0,0,0,0.5)] border border-transparent focus-within:border-[#444746]">
+                    <textarea 
+                        id="userInput" 
+                        rows="1" 
+                        placeholder="Enter a prompt here" 
+                        class="flex-1 max-h-[200px] py-2 px-2 overflow-y-auto"
+                    ></textarea>
+                    
+                    <button type="submit" id="submitBtn" class="p-2 mb-1 rounded-full text-[#444746] transition-colors" disabled>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M3 20v-6l8-2-8-2V4l19 8z"/></svg>
+                    </button>
+                </div>
+                <p class="text-center text-[#C4C7C5] text-xs mt-3 font-google">Hexon can display inaccurate info, so double-check its script references and responses.</p>
+            </form>
+        </footer>
+    </div>
 
     <script>
         const API_BASE_URL = ""; 
         const chatStream = document.getElementById('chatStream');
         const inputForm = document.getElementById('inputForm');
         const userInput = document.getElementById('userInput');
-        const modelSelect = document.getElementById('modelSelect');
         const activeModelLabel = document.getElementById('activeModelLabel');
         const submitBtn = document.getElementById('submitBtn');
         const emptyState = document.getElementById('emptyState');
+        const modelListContainer = document.getElementById('modelListContainer');
+        const modelSearch = document.getElementById('modelSearch');
 
-        // Configure Marked.js for highlight.js integration
+        let allModels = [];
+        let currentSelectedModel = "meta-llama/Meta-Llama-3-8B-Instruct";
+
+        // Initialize markdown code parameters
         marked.setOptions({
             highlight: function(code, lang) {
                 const language = hljs.getLanguage(lang) ? lang : 'plaintext';
@@ -182,7 +190,6 @@
             }
         });
 
-        // Input button logic & auto-resize
         userInput.addEventListener('input', function() {
             this.style.height = 'auto';
             this.style.height = (this.scrollHeight) + 'px';
@@ -205,30 +212,64 @@
             }
         });
 
-        // Update visual label when model changes
-        modelSelect.addEventListener('change', (e) => {
-            activeModelLabel.textContent = e.target.value;
-        });
-
+        // 1. Fetch backend registry pipeline array mapping sorted by best downloads first
         async function loadActiveModels() {
             try {
                 const res = await fetch(`${API_BASE_URL}/api/models`);
                 const data = await res.json();
                 
                 if (data.models && data.models.length > 0) {
-                    modelSelect.innerHTML = ''; 
-                    data.models.forEach(model => {
-                        const option = document.createElement('option');
-                        option.value = model;
-                        option.textContent = model;
-                        if(model === "meta-llama/Meta-Llama-3-8B-Instruct") option.selected = true;
-                        modelSelect.appendChild(option);
-                    });
+                    allModels = data.models;
+                    renderModelList(allModels);
                 }
             } catch (err) {
-                console.error("Failed to load models.", err);
+                console.error("Failed model synchronization loop:", err);
+                modelListContainer.innerHTML = `<div class="text-xs text-rose-400 p-3 font-mono">Sync Fault. Offline backup fallback active.</div>`;
             }
         }
+
+        // 2. Render array list cleanly on left viewport panel area
+        function renderModelList(modelsToRender) {
+            modelListContainer.innerHTML = '';
+            
+            modelsToRender.forEach((model, index) => {
+                const button = document.createElement('button');
+                const isActive = model === currentSelectedModel;
+                
+                button.className = `w-full flex flex-col text-left px-3 py-2.5 rounded-xl transition-colors font-google text-sm ${
+                    isActive 
+                    ? 'bg-[#A8C7FA]/10 text-[#A8C7FA] border border-[#A8C7FA]/20' 
+                    : 'text-[#C4C7C5] hover:bg-[#282A2C]'
+                }`;
+                
+                // Truncate path for high visibility display row
+                const shortName = model.split('/').pop();
+                const providerName = model.split('/')[0] || "HuggingFace";
+
+                button.innerHTML = `
+                    <div class="flex items-center justify-between w-full">
+                        <span class="font-medium text-white truncate max-w-[180px]">${shortName}</span>
+                        ${index < 5 ? '<span class="text-[9px] bg-[#A8C7FA]/20 text-[#A8C7FA] px-1 rounded font-mono font-bold">TOP</span>' : ''}
+                    </div>
+                    <span class="text-[11px] text-slate-500 truncate font-mono">${providerName}</span>
+                `;
+                
+                button.addEventListener('click', () => {
+                    currentSelectedModel = model;
+                    activeModelLabel.textContent = model;
+                    renderModelList(allModels); // Re-render to update the active item background color state
+                });
+                
+                modelListContainer.appendChild(button);
+            });
+        }
+
+        // Live filter execution matching input character parameters
+        modelSearch.addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase().trim();
+            const filtered = allModels.filter(m => m.toLowerCase().includes(query));
+            renderModelList(filtered);
+        });
 
         function appendMessage(text, isUser = false) {
             if(emptyState) emptyState.style.display = 'none';
@@ -242,7 +283,6 @@
                 messageBox.innerText = text;
                 wrapper.appendChild(messageBox);
             } else {
-                // AI Sparkle Avatar
                 const avatar = document.createElement('div');
                 avatar.className = `w-8 h-8 flex-shrink-0 mt-1`;
                 avatar.innerHTML = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M21 12C21 12 14.5 12 12 21C12 21 12 14.5 12 12C12 9.5 21 12 21 12ZM12 12C12 12 12 3 12 3C12 3 9.5 12 12 12ZM12 12C12 12 3 12 3 12C3 12 9.5 12 12 12ZM12 12C12 12 12 21 12 21" fill="#A8C7FA"/></svg>`;
@@ -271,7 +311,6 @@
             submitBtn.classList.remove('text-[#A8C7FA]', 'hover:bg-[rgba(168,199,250,0.1)]');
             submitBtn.disabled = true;
 
-            // Loading state (Spinning Sparkle)
             const thinkingRow = document.createElement('div');
             thinkingRow.className = "flex gap-4 text-[#C4C7C5]";
             thinkingRow.id = "hexon-thinking";
@@ -283,7 +322,7 @@
                 const response = await fetch(`${API_BASE_URL}/api/chat`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ message: prompt, model: modelSelect.value })
+                    body: JSON.stringify({ message: prompt, model: currentSelectedModel })
                 });
                 
                 const data = await response.json();
@@ -296,7 +335,7 @@
                 }
             } catch (err) {
                 document.getElementById('hexon-thinking').remove();
-                appendMessage("Failed to connect to the Hexon network.", false);
+                appendMessage("Failed to process transaction packets with the active node infrastructure.", false);
             }
         });
 
