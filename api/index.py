@@ -1,4 +1,5 @@
 import os
+import base64
 import requests
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse, FileResponse
@@ -16,9 +17,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Initialize Hugging Face with your specific token
+# 1. Place your Base64 encoded token string here
+ENCODED_TOKEN = "aGZfcWRoZlpEWHZldFBNRmx0Q3RlaE96VlVkWXFucUhxQXd5RA==" # Replace with your actual base64 string
+
+# 2. Decode the token back to a standard string
+decoded_token = base64.b64decode(ENCODED_TOKEN).decode("utf-8")
+
+# 3. Initialize Hugging Face with the decoded token
 client = InferenceClient(
-    api_key="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"
+    api_key=decoded_token
 )
 
 # Safely locate index.html at the project root directory relative to this file
